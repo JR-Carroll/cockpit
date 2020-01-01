@@ -1,0 +1,155 @@
+.layout-main,
+.layout-footer {
+  margin-left: var(--nav-width);
+}
+.container {
+  max-width: var(--max-content-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.layout-main {
+  margin-top: var(--padding-unit);
+  margin-bottom: var(--padding-unit);
+  padding: 0 var(--padding-unit);
+}
+
+.layout-header {
+  border-right: 1px solid var(--border-color);
+  position: fixed;
+  padding: 0 var(--padding-unit);
+  top: 0;
+  left: 0;
+  right: 0;
+  width: var(--nav-width);
+  height: 100%;
+  overflow: scroll;
+
+  h1 {
+    display: block;
+    margin-bottom: 1.5em;
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+
+    a:link, a:visited {
+      color: var(--primary-color);
+    }
+  }
+
+  // Logo
+  img {
+    max-width: 120px;
+    display: block;
+    margin: 1em auto;
+  }
+}
+
+.layout-nav {
+  margin-bottom: 2rem;
+
+  ul {
+    margin: 0 0 2em;
+    padding: 0;
+  }
+
+  li {
+    list-style-type: none;
+    font-size: 0.95em;
+
+    &.nav-heading {
+      &:first-child {
+        margin-left: 0;
+        margin-bottom: 1em;
+        text-transform: uppercase;
+        color: #aaa;
+        font-size: 0.85em;
+      }
+    }
+  }
+
+  a {
+    color: #666;
+
+    &:link, a:visited {
+      color: #666;
+    }
+  }
+}
+
+.layout-content--source {
+  max-width: none;
+}
+
+.nav-heading {
+  margin-top: 1em;
+  font-weight: 500;
+
+  a {
+    color: var(--text-color);
+    &:link, &:visited {
+      color: var(--text-color);
+    }
+  }
+
+  .nav-item-type {
+    font-size: 0.9em;
+  }
+}
+
+// colors based on esdoc
+.nav-item-type {
+  display: inline-block;
+  font-size: 0.9em;
+  width: 1.2em;
+  height: 1.2em;
+  line-height: 1.2em;
+  display: inline-block;
+  text-align: center;
+  border-radius: 0.2em;
+  margin-right: 0.5em;
+  margin-left: 1em;
+
+  &.type-class {
+    display: none;
+  }
+
+  &.type-typedef {
+    color: #39b739;
+    background-color: #d5efd5;
+  }
+
+  &.type-function {
+    color: #549ab9;
+    background-color: #e1f6ff;
+  }
+
+  &.type-namespace {
+    color: #eb6420;
+    background-color: #fad8c7;
+  }
+
+  &.type-member,
+  &.type-module {
+    color: #964cb1;
+    background-color: #f2e4f7;
+  }
+
+  &.type-event {
+    color: #948b34;
+    background-color: #fff6a6;
+  }
+}
+
+.layout-footer {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  font-size: 0.8em;
+  text-align: center;
+  color: #aaa;
+
+  a {
+    color: var(--light-font-color);
+    text-decoration: underline;
+  }
+}

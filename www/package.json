@@ -1,0 +1,50 @@
+{
+  "name": "cockpit",
+  "version": "1.0.0",
+  "description": "Cockpit monitors a tool-servers services and websites so developers can easily update without needing admin/ssh access.  It's more than git-hooks, but performs similar functions.  Consider this a web interface!",
+  "main": "index.html",
+  "scripts": {
+    "build": "webpack",
+    "start": "webpack-dev-server",
+    "docs": "jsdoc -c jsdoc.json"
+  },
+  "author": "j. r. carroll",
+  "license": "ISC",
+  "private": true,
+  "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "babel-loader": "^8.0.6",
+    "better-docs": "^1.4.3",
+    "css-loader": "^3.2.0",
+    "extract-loader": "^3.1.0",
+    "file-loader": "^4.2.0",
+    "node-sass": "^4.13.0",
+    "sass-loader": "^8.0.0",
+    "toast-jsdoc": "^1.0.2",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9",
+    "webpack-dev-server": "^3.9.0"
+  },
+  "dependencies": {
+    "@material/button": "^3.2.0",
+    "@material/card": "^3.2.0",
+    "@material/chips": "^3.2.0",
+    "@material/data-table": "^3.2.0",
+    "@material/drawer": "^3.2.0",
+    "@material/layout-grid": "^3.1.0",
+    "@material/linear-progress": "^4.0.0",
+    "@material/menu": "^4.0.0",
+    "@material/top-app-bar": "^3.2.0",
+    "bootstrap": "^4.3.1",
+    "d3": "^5.12.0",
+    "gauge-chart": "^0.5.3",
+    "gauge-chart-js": "^1.1.0",
+    "jquery": "^3.4.1",
+    "ngx-d3-liquid-fill-gauge": "^1.2.0",
+    "popper": "^1.0.1",
+    "popper.js": "^1.16.0",
+    "pretty-dropdowns": "^4.17.0",
+    "vanilla-modal": "^1.6.5"
+  }
+}

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>index.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-CockpitMainServer.html">CockpitMainServer</a><ul class='methods'><li data-type='method'><a href="module-CockpitMainServer.html#.reload_serviceConfig">reload_serviceConfig</a></li><li data-type='method'><a href="module-CockpitMainServer.html#~get_runningServices">get_runningServices</a></li><li data-type='method'><a href="module-CockpitMainServer.html#~load_serviceConfig">load_serviceConfig</a></li><li data-type='method'><a href="module-CockpitMainServer.html#~load_websiteConfig">load_websiteConfig</a></li><li data-type='method'><a href="module-CockpitMainServer.html#~read_serviceConfig">read_serviceConfig</a></li><li data-type='method'><a href="module-CockpitMainServer.html#~read_websiteConfig">read_websiteConfig</a></li><li data-type='method'><a href="module-CockpitMainServer.html#~reload_websiteConfig">reload_websiteConfig</a></li><li data-type='method'><a href="module-CockpitMainServer.html#~update_websiteGitPull">update_websiteGitPull</a></li></ul></li><li><a href="module-SystemResourceMonitor.html">SystemResourceMonitor</a><ul class='methods'><li data-type='method'><a href="module-SystemResourceMonitor.html#.get_freeDiskSpace">get_freeDiskSpace</a></li><li data-type='method'><a href="module-SystemResourceMonitor.html#.get_freeMemory">get_freeMemory</a></li><li data-type='method'><a href="module-SystemResourceMonitor.html#.get_freeSwap">get_freeSwap</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#GET'/'">GET '/'</a></li><li><a href="global.html#GET'/services'">GET '/services'</a></li><li><a href="global.html#GET/logs">GET /logs</a></li><li><a href="global.html#GET/websites">GET /websites</a></li><li><a href="global.html#POST'/services'">POST '/services'</a></li><li><a href="global.html#POST/websites">POST /websites</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">index.js</h1>
+    
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** Cockpit Server: a nodeJS:express server designed to monitor server resources and deploy code.
+* @module CockpitMainServer
+* @author Justin Carroll (jrc.csus@gmail.com)
+* @requires Express
+* @since Nov 15, 2019
+*/
+
+
+const express = require('express')
+const { promisify } = require('util');
+const archiver = require('archiver');
+
+const app = express();
+const exec = promisify(require('child_process').exec);
+const fsRead = promisify(require('fs').readFile);
+const fs = require('fs');
+const memory = require('./SystemResourceMonitor.js');
+
+const PORT = 8000;
+
+//////////////////////////////
+/*		   ROOT APP		    */
+//////////////////////////////
+
+app.use(function(req, res, next) {
+	res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	next();
+});
+
+/**
+ * Root path for top level Express Server.
+ * @name GET '/'
+ * @global
+ * @param {object} req request objet as sent by Express.
+ * @param {object} res response objet as sent by Express.
+ * @example "https://&lt;localhost>/"
+ */
+app.get('/', async function(req, res) {
+ 	res.send("go away!");
+});
+
+
+/**
+ * Re-read the service config object on the server.  This is necessary for when you need to update
+ * the service configuration to exclude or include new services that should be monitored.  This is a 
+ * helper function/wrapper to loading the config.
+ * @function
+ * @static
+ * @category Configuration Management
+ * @yields load_serviceConfig()
+ */
+async function reload_serviceConfig() {
+	await load_serviceConfig();
+}
+
+
+/**
+ * Load the service config from the file system.
+ * @function
+ * @category Configuration Management
+ * @returns {object} The service config object.  
+ */
+async function load_serviceConfig() {
+	// Load the website config file.
+	// TODO: If no services.conf exists, we'll need to create a new file for it!
+	console.log(__dirname);
+	var data = await fsRead(__dirname + '/services.conf', 'utf8');
+	data = read_serviceConfig(null, data);
+	return data;
+}
+
+/**
+ * Runs JSON.parse() on the raw fs.read() of the service config value.
+ * @function
+ * @category Configuration Management
+ * @param {object} err 
+ * @param {object} data 
+ * @returns {object} The parsed service config object.
+ * @todo need to have error handling here.
+ */
+function read_serviceConfig(err, data) {
+	serviceConfig = JSON.parse(data);
+	serviceConfig.lastLoadedDT = new Date().toISOString();
+	return serviceConfig;
+}
+
+/**
+ * Get the running services on the machine, grep'ed against the service.conf file for allowed
+ * serices.  Ultimately using systemctl under the hood.
+ * @category Service Management
+ * @function
+ * @returns {object} allServices
+ * @todo There is a current cybersecurity flaw here that will allow "*" to return all services. Need to do data santization.
+ */
+async function get_runningServices() {
+	// get all the keys from the service.conf to filter the list down.
+	var serviceKeys = Object.keys(serviceConfig.services);
+
+	var serviceData = [];
+
+	for (var i=0; i&lt;serviceKeys.length; i++) {
+		serviceData.push(serviceConfig.services[serviceKeys[i]].serviceName);
+	}
+
+	const _services = await exec(`systemctl | grep -E -- "${serviceData.join("|")}"`);
+	console.log(`systemctl | grep -E -- "${serviceData.join("|")}"`);
+
+	const serviceLineArray = [];
+
+	// Slicing Information
+	// =========================
+    // serviceName:  slice(0,89)
+	// status:  slice(89,110)
+	// description: slice(113,)
+	const preparsedServices = _services.stdout.split('\n');
+
+	for (var i = 0; i &lt; preparsedServices.length; i++) {
+		let serviceLine = {};
+		serviceLine.status = {};
+		serviceLine.serviceName = preparsedServices[i].slice(0, 89).trim();
+		if (serviceLine.serviceName == "") {
+			//pass
+		} else {
+			_protoServices = preparsedServices[i].slice(89, 110).split(' ');
+			serviceLine.status.loaded = _protoServices[0];
+			serviceLine.status.active = _protoServices[1];
+			serviceLine.status.sub = _protoServices[2];
+			serviceLine.description = preparsedServices[i].slice(113, ).trim();
+			serviceLineArray.push(serviceLine)
+		}
+	}
+
+	// Removig the last 8 elements because they are empty!
+	var allServices = {};
+	allServices.services = serviceLineArray;
+	allServices.lasteUpdatedDT = new Date().toISOString();
+	return {allServices};
+}
+
+/**
+ * API GET request for services running on the server, as filtered by the services.conf
+ * @name GET '/services'
+ * @global
+ * @param {object} req request objet as sent by Express.
+ * @param {object} res response objet as sent by Express.
+ * @example "https://&lt;localhost>/services"
+ */
+// Return currently running services on server.
+app.get('/services', async function(req, res) {
+	if (req.query.reloadConfig){
+		console.log("...Reloading service config...");
+		// TODO(JRCarroll): Need to add specific logging for anyone who makes an edit to this config or attempts to reload.  Also consider putting a watch such that this config reloads if a write takes place.
+		var _ = await reload_serviceConfig();
+		res.send("Serice Config Reloaded");
+		console.log(serviceConfig);
+	} else {
+		var data = await get_runningServices();
+	}
+	
+	res.send(data);
+});
+
+/**
+ * API POST to services to interact with the approved services (where approved means those in the services.conf file),
+ * @name POST '/services'
+ * @global
+ * @param {object} req request objet as sent by Express.
+ * @param {object} res response objet as sent by Express.
+ * @example "https://&lt;localhost>/"
+ */
+app.post('/services', async function(req, res) {
+	console.log(req.query);
+	console.log(serviceConfig.services);
+
+	// This will eventually be used to git pull by branch name, and deploy/restart a new service.
+	var serviceName = req.query.serviceName;
+	var serviceAction = req.query.serviceAction;
+	var serviceObject = serviceConfig.services[req.query.serviceName];
+
+	var status = 500;
+
+	if (!serviceName | !serviceAction) {
+		status = 400;
+	} else if (!serviceObject) {
+		status = 404;
+	} else if (serviceObject &amp;&amp; serviceObject.serviceSettings[0]=='all') {
+		var result = await exec(`systemctrl ${serviceAction} ${serviceName}`);
+		status = 200;
+		
+	}
+
+	res.sendStatus(status);
+
+	console.log("ServiceData", serviceName, "ServiceAction", serviceAction);
+});
+
+
+/**
+ * Update website on server with a git pull request.
+ * @param {string} websiteName The human readible website name as configured in the website.conf file.
+ * @returns stdout from the git pull command.
+ */
+async function update_websiteGitPull (websiteName) {
+	// Update a directory by issuing a git-pull request. 
+	// Note: this requires an SSH key added to the git repo + ssh-agent.
+	console.log(websiteName);
+	console.log(websiteConfig);
+	// debugger;
+	var pathToGitRepo = websiteConfig.websites[websiteName].gitPathOnServer;
+	var data = await exec(`git -C ${pathToGitRepo} pull`);
+	// debugger;
+	return data.stdout
+}
+
+/**
+ * Invoking this function will reload the website.conf file from the server.  This is useful when you 
+ * deploy a new website. This is a promisified wrapper for the real function.
+ * @yields load_websiteConfig()
+ */
+async function reload_websiteConfig() {
+	await load_websiteConfig();
+}
+
+/**
+ * This will reload the entire website.conf file from the filesystem. This both returns the config values as well as
+ * invokes read_websiteConfig() to parse and store (in memory) the website configuration.
+ * @returns {object} data website.conf (JSON) parsed data object.
+ */
+async function load_websiteConfig() {
+	// Load the website config file.
+	// TODO: If no websites.config exists, we'll need to create a new file for it!
+	console.log(__dirname);
+	var data = await fsRead(__dirname + '/websites.conf', 'utf8');
+	data = read_websiteConfig(null, data)
+	return data;
+}
+
+/**
+ * Reads/parses the website.conf file.  JSON data is underlying.  
+ * @param {object} err 
+ * @param {object} data 
+ * @returns {object} websiteConfig (parsed JSON)
+ */
+function read_websiteConfig(err, data) {
+	websiteConfig= JSON.parse(data);
+	websiteConfig.lastLoadedDT = new Date().toISOString();
+	return websiteConfig;
+}
+
+/**
+ * Returns a list of monitored websites.
+ * @global
+ * @name GET /websites
+ * @param {object} req request objet as sent by Express.
+ * @param {object} res response objet as sent by Express.
+ * @example "https://&lt;host>/websites"
+ */
+// Get list &amp; status of websites that are currently being monitored.
+app.get('/websites', async function (req, res) {
+  if (req.query.reloadConfig){
+  	var data = await reload_websiteConfig()
+  }
+  res.send(websiteConfig);
+});
+
+/**
+ * Interact with monitored websites based on a set of permissions as configured in the website.conf file.
+ * @global
+ * @param {object} req request objet as sent by Express.
+ * @param {object} res response objet as sent by Express.
+ * @name POST /websites
+ * @example "https://&lt;host>/websites"
+ */
+app.post('/websites', async function(req, res) {
+	console.log(`Trying to update: ${req.query.websiteName}`);
+	try {
+		var output  = await update_websiteGitPull(req.query.websiteName);
+	} catch(error) {
+		var output = `Invalid request ${error}`;
+	}
+	res.send(output);
+	// This will eventually be used to git pull by branch name, and deploy.
+});
+
+
+//////////////////////////////
+/*			LOGS		    */
+//////////////////////////////
+
+/**
+ * Retrieve the logs for a website or service based on permissions alloted to the requested resource.
+ * @global
+ * @name GET /logs
+ * @param {object} req request objet as sent by Express.
+ * @param {object} res response objet as sent by Express.
+ * @example "https://&lt;host>/logs"
+ */
+app.get('/logs', (req, res) => {
+	var archive = archiver('tar', {
+		zlib: { level: 9 } // Sets the compression level.
+	  });
+
+	var logsDir = websiteConfig.websites[req.query.websiteName].logPath;
+	console.log(logsDir);
+	archive.directory(logsDir, "/logs", "");
+	
+	res.set('Content-Type','application/octet-stream');
+	res.set('Content-Disposition',`attachment; filename=download.tar`);
+	res.set('Content-Length',archive.length);
+	res.attachment("download.tar");
+	archive.pipe(res);
+	archive.finalize();
+});
+
+//////////////////////////////////
+/*			INIT DEFAULTS		*/
+//////////////////////////////////
+var websiteConfig = {};
+var serviceCOnfig = {};
+
+load_websiteConfig();
+load_serviceConfig();
+
+//////////////////////////////////
+/*			APP DEFAULTS		*/
+//////////////////////////////////
+
+// Default promisify error handling.
+process.on('unhandledRejection', (reason, p) => {
+	console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+	// Stack Trace
+	console.log(reason.stack);
+  });
+
+app.listen(PORT, () => {
+  console.log('Example app listening on port 8000!')
+});</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Tue Nov 19 2019 16:51:27 GMT-0700 (Mountain Standard Time) using the Toast theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

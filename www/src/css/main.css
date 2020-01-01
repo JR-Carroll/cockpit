@@ -1,0 +1,198 @@
+html {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+}
+
+.demo-body {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.demo-main {
+  padding-left: 16px;
+  padding-bottom: 16px;
+  overflow: auto;
+}
+
+.app-drawer-layout {
+  display: flex;
+  flex: 1;
+ 
+  .mdc-drawer--dismissible {
+    top: 64px;
+    height: calc(100% - 64px);    
+  }
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 1.5rem;
+}
+
+.mdc-layout-grid__inner, .mdc-layout-grid {
+	/* height: 100%; */
+}
+
+.mdc-layout-grid {
+	margin: 0;
+}
+
+@media (min-width: 840px) {
+	.mdc-layout-grid {
+		padding: 5px;
+    width: 100%;  
+  }
+}
+
+.mdc-top-app-bar__title {
+  font-size: 1.80rem;
+}
+
+.mdc-top-app-bar {
+  background-color: rgba(5, 4, 4, 0.521);
+}
+
+.mdc-top-app-bar__section { 
+	padding: 0;
+}
+
+.my-card {
+  height: 100px;
+}
+
+.demo-card__primary {
+  padding-left: 15px;
+  background-color: rgba(206, 206, 206, 0.315);
+}
+
+.mdc-card__actions {
+  background-color: rgba(122, 117, 117, 0.315);
+}
+
+.mdc-data-table__header-row {
+  background-color: rgba(122, 117, 117, 0.315);
+}
+
+.mdc-data-table__row {
+  background-color: rgba(236, 229, 229, 0.397);
+}
+
+#servicePage, #adminPage {
+	display: none;
+}
+
+.mdc-typography--subtitle2 {
+	font-size: .875rem;
+    line-height: 1.375rem;
+    font-weight: 500;
+    letter-spacing: .0071428571em;	
+}
+
+.modal, .modal-hider {
+  display: none;
+}
+
+.vanilla-modal .modal {
+  display: block;
+  position: fixed;
+  content: "";
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.2s, z-index 0s 0.2s;
+  text-align: center;
+  overflow: hidden;
+  overflow-y: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vanilla-modal .modal > * {
+  display: inline-block;
+  white-space: normal;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.vanilla-modal .modal:before {
+  display: inline-block;
+  overflow: hidden;
+  width: 0;
+  height: 100%;
+  vertical-align: middle;
+  content: "";
+}
+
+.vanilla-modal.modal-visible .modal {
+  z-index: 99;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.modal-inner {
+  position: relative;
+  overflow: hidden;
+  max-width: 90%;
+  max-height: 90%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #fff;
+  z-index: -1;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.2s, transform 0.2s, z-index 0s 0.2s;
+}
+.modal-visible .modal-inner {
+  z-index: 100;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+[data-modal-close] {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  top: 0;
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  background: #fff;
+  box-shadow: -1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.mdc-data-table {
+  overflow-x: unset;
+  min-width: 90%;
+}
+
+.mdc-drawer {
+  position: fixed;
+}
+
+#chartHolder {
+	width: 200%;
+}
+
+.gaugeLabel {
+  margin-top: -50px;
+}
+

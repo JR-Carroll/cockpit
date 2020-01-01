@@ -1,0 +1,14 @@
+{
+    "opts": {
+        "template": "node_modules/docma"
+      },
+    "source": {
+        "include": ["./index.js", "./SystemResourceMonitor.js", "./README.md", "./package.json"],
+        "exclude": [ /* array of paths to exclude */ ],
+        "includePattern": ".+\\.js(doc|x)?$",
+        "excludePattern": "(^|\\/|\\\\)_"
+        },
+    "plugins": [
+        "node_modules/better-docs/category"
+    ]
+}
